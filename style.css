@@ -1,1 +1,26 @@
-/* มิลค์กี้ปล่อยว่างไว้ก่อนนะคะ เดี๋ยวเรามาเติมสีสันกันทีหลังค่ะ! */
+/* จำกัดความสูงของกล่องเก็บการ์ดและทำให้เลื่อน Scroll ได้ */
+#font_manager_saved_cards {
+    max-height: 300px; /* ปรับตัวเลขนี้ได้นะคะ ถ้าอยากให้กล่องสูงหรือเตี้ยกว่านี้ */
+    overflow-y: auto;  /* ทำให้มี Scrollbar โผล่มาเมื่อการ์ดล้นกล่อง */
+    overflow-x: hidden;
+
+    /* ตกแต่งกรอบให้ดูเป็นสัดส่วนขึ้นอีกนิดค่ะ */
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: var(--SmartThemeBlurTintColor);
+}
+
+/* ตกแต่งหน้าตาของการ์ดให้ดูน่ารักขึ้น (Optional) */
+.font-manager-card {
+    background-color: var(--SmartThemeBodyColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.font-manager-card:last-child {
+    margin-bottom: 0; /* เอา margin ของการ์ดใบสุดท้ายออก จะได้ไม่เหลือที่ว่างด้านล่าง */
+}
