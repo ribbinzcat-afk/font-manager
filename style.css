@@ -1,26 +1,342 @@
-/* จำกัดความสูงของกล่องเก็บการ์ดและทำให้เลื่อน Scroll ได้ */
-#font_manager_saved_cards {
-    max-height: 300px; /* ปรับตัวเลขนี้ได้นะคะ ถ้าอยากให้กล่องสูงหรือเตี้ยกว่านี้ */
-    overflow-y: auto;  /* ทำให้มี Scrollbar โผล่มาเมื่อการ์ดล้นกล่อง */
-    overflow-x: hidden;
+/* ---------- ดรอเวอร์ตั้งค่า (หน้า Extensions) ---------- */
+.font-manager-settings .fm-settings-hint {
+    opacity: 0.75;
+    font-size: 0.9em;
+    margin: 5px 0 10px;
+}
 
-    /* ตกแต่งกรอบให้ดูเป็นสัดส่วนขึ้นอีกนิดค่ะ */
+.font-manager-settings hr {
+    border-color: var(--SmartThemeBorderColor);
+    margin: 10px 0;
+}
+
+/* ---------- แผงลอย ---------- */
+.fm-panel {
+    width: min(760px, 96vw);
+    max-height: 90dvh;
+    display: none;
+}
+
+.fm-panel-header {
+    position: relative;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    cursor: default;
+    background-color: var(--SmartThemeBlurTintColor);
+    border-bottom: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 10px 10px 0 0;
+}
+
+/* ST's ".drag-grabber" ค่าเริ่มต้น (style.css หลัก) เป็น position:absolute + display:none
+   (แสดงเมื่อเปิดโหมด "Move UI" เท่านั้น) — ที่นี่ดึงกลับมาเรียงในแถวหัวข้อปกติแทนที่จะลอยมุมขวาบน */
+#fontManagerPanelheader {
+    position: static;
+    cursor: grab;
+    padding: 4px;
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fm-panel-title {
+    flex: 1;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fm-panel-close {
+    cursor: pointer;
+    padding: 4px;
+    min-width: 32px;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fm-panel-body {
+    padding: 10px 12px 14px;
+    max-height: calc(90dvh - 48px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.fm-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* ---------- ช่องเลือกฟอนต์ 3 ช่อง ---------- */
+.fm-slot-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.fm-slot-row label {
+    min-width: 140px;
+    flex: 0 0 auto;
+}
+
+.fm-slot-row select {
+    flex: 1;
+    min-width: 160px;
+    margin: 0;
+}
+
+/* ---------- พรีวิว ---------- */
+.fm-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+}
+
+.fm-preview-box {
     border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background-color: var(--SmartThemeBlurTintColor);
+    min-width: 0;
+}
+
+.fm-preview-label {
+    display: block;
+    font-size: 0.75em;
+    opacity: 0.65;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.fm-preview-text {
+    word-break: break-word;
+}
+
+/* ---------- แจ้งเตือนไฟล์หาย ---------- */
+.fm-warning {
+    border: 1px solid #8b5a2e;
+    background: rgba(139, 90, 46, 0.15);
+    border-radius: 8px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.fm-warning-title {
+    font-weight: bold;
+}
+
+.fm-missing-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.fm-missing-row span {
+    flex: 1;
+    min-width: 120px;
+}
+
+.fm-missing-badge {
+    font-size: 0.75em;
+    color: #e0a355;
+    white-space: nowrap;
+}
+
+/* ---------- เพิ่มฟอนต์ ---------- */
+.fm-dropzone {
+    border: 2px dashed var(--SmartThemeBorderColor);
     border-radius: 10px;
-    padding: 10px;
-    margin-top: 10px;
+    padding: 16px 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 0.15s, background-color 0.15s;
+}
+
+.fm-dropzone i {
+    font-size: 1.6em;
+    opacity: 0.7;
+}
+
+.fm-dropzone small {
+    opacity: 0.6;
+}
+
+.fm-dropzone-active {
+    border-color: var(--SmartThemeQuoteColor);
     background-color: var(--SmartThemeBlurTintColor);
 }
 
-/* ตกแต่งหน้าตาของการ์ดให้ดูน่ารักขึ้น (Optional) */
-.font-manager-card {
-    background-color: var(--SmartThemeBodyColor);
-    border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 10px;
+.fm-inline-btn {
+    display: inline-flex;
+    padding: 2px 10px;
+    min-height: 32px;
 }
 
-.font-manager-card:last-child {
-    margin-bottom: 0; /* เอา margin ของการ์ดใบสุดท้ายออก จะได้ไม่เหลือที่ว่างด้านล่าง */
+.fm-link-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.fm-link-row input {
+    flex: 1;
+    min-width: 160px;
+    margin: 0;
+}
+
+.fm-add-status {
+    font-size: 0.85em;
+    opacity: 0.8;
+    min-height: 1.2em;
+}
+
+.fm-add-status-error {
+    color: #d9776b;
+}
+
+/* ---------- คลังฟอนต์ ---------- */
+.fm-list-header {
+    display: flex;
+    align-items: center;
+}
+
+.fm-font-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 45dvh;
+    overflow-y: auto;
+}
+
+.fm-empty {
+    text-align: center;
+    opacity: 0.6;
+    font-style: italic;
+    padding: 16px;
+}
+
+.fm-font-card {
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background-color: var(--SmartThemeBlurTintColor);
+}
+
+.fm-font-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.fm-font-kind {
+    flex: 0 0 auto;
+}
+
+.fm-font-label-input {
+    flex: 1;
+    min-width: 100px;
+    margin: 0;
+}
+
+.fm-icon-btn {
+    flex: 0 0 auto;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.fm-font-href {
+    margin-top: 6px;
+    font-size: 0.8em;
+    opacity: 0.65;
+    word-break: break-all;
+}
+
+.fm-variant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.fm-variant-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+
+.fm-variant-missing {
+    background: rgba(139, 90, 46, 0.12);
+}
+
+.fm-variant-row select {
+    margin: 0;
+    min-height: 32px;
+    flex: 0 0 auto;
+}
+
+.fm-variant-weight {
+    min-width: 130px;
+}
+
+.fm-variant-style {
+    min-width: 90px;
+}
+
+.fm-variant-origin {
+    opacity: 0.7;
+    min-width: 20px;
+    text-align: center;
+}
+
+.fm-variant-size {
+    font-size: 0.8em;
+    opacity: 0.6;
+    min-width: 55px;
+}
+
+/* ---------- responsive: มือถือ / จอแคบ ---------- */
+@media screen and (max-width: 768px) {
+    .fm-panel {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100dvh !important;
+        max-height: 100dvh !important;
+        max-width: 100vw !important;
+        border-radius: 0;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+    }
+
+    .fm-panel-body {
+        max-height: calc(100dvh - 48px);
+    }
+
+    .fm-slot-row label {
+        min-width: 100%;
+    }
 }

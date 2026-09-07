@@ -1,0 +1,33 @@
+<div class="font-manager-settings">
+    <div class="inline-drawer">
+        <div class="inline-drawer-toggle inline-drawer-header">
+            <b>Font Manager 🎨</b>
+            <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
+        </div>
+        <div class="inline-drawer-content">
+            <label class="checkbox_label" for="fm-enabled">
+                <input id="fm-enabled" type="checkbox" />
+                <span>เปิดใช้งาน Font Manager</span>
+            </label>
+
+            <div class="fm-settings-hint">
+                จัดการฟอนต์ (อัปโหลด / วางลิงก์ / เลือกใช้แยกตาม UI-แชท-โมโนสเปซ) ได้จากแผงลอย —
+                เปิดได้จากไอคอนไม้กายสิทธิ์ 🪄 ข้างช่องพิมพ์ข้อความด้านล่าง
+            </div>
+            <button id="fm-open-panel-btn" class="menu_button">
+                <i class="fa-solid fa-up-right-from-square"></i> เปิดแผงจัดการฟอนต์
+            </button>
+
+            <hr>
+
+            <label class="checkbox_label" for="fm-use-size">
+                <input id="fm-use-size" type="checkbox" />
+                <span>กำหนดขนาดตัวอักษรเอง (ปกติปล่อยให้ Font Scale ของ SillyTavern คุม)</span>
+            </label>
+            <div class="flex-container flexFlowColumn gap-10" id="fm-size-row">
+                <label>ขนาดตัวอักษร: <span id="fm-size-display">15px</span></label>
+                <input id="fm-size-slider" type="range" min="10" max="30" step="1" value="15" />
+            </div>
+        </div>
+    </div>
+</div>

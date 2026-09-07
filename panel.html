@@ -1,0 +1,67 @@
+<div id="fontManagerPanel" class="draggable fm-panel">
+    <div class="fm-panel-header flex-container">
+        <div id="fontManagerPanelheader" class="fa-solid fa-grip drag-grabber fm-drag-grabber" title="ลากเพื่อย้ายตำแหน่ง"></div>
+        <div class="fm-panel-title"><i class="fa-solid fa-font"></i> Font Manager</div>
+        <div id="fontManagerPanelClose" class="fa-solid fa-circle-xmark dragClose fm-panel-close" title="ปิด"></div>
+    </div>
+    <div class="fm-panel-body scrollY">
+        <div class="fm-section">
+            <div class="fm-slot-row">
+                <label for="fm-slot-ui">ตัวติดต่อผู้ใช้ (UI)</label>
+                <select id="fm-slot-ui" class="text_pole fm-slot-select" data-slot="ui">
+                    <option value="">ค่าเริ่มต้นของ SillyTavern</option>
+                </select>
+            </div>
+            <div class="fm-slot-row">
+                <label for="fm-slot-chat">ข้อความแชท</label>
+                <select id="fm-slot-chat" class="text_pole fm-slot-select" data-slot="chat">
+                    <option value="">ค่าเริ่มต้นของ SillyTavern</option>
+                </select>
+            </div>
+            <div class="fm-slot-row">
+                <label for="fm-slot-mono">โค้ด / โมโนสเปซ</label>
+                <select id="fm-slot-mono" class="text_pole fm-slot-select" data-slot="mono">
+                    <option value="">ค่าเริ่มต้นของ SillyTavern</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="fm-section fm-preview-grid">
+            <div class="fm-preview-box">
+                <span class="fm-preview-label">UI</span>
+                <div class="fm-preview-text" id="fm-preview-ui">Aa อักษรไทย 123 <b>ตัวหนา</b> <i>ตัวเอียง</i></div>
+            </div>
+            <div class="fm-preview-box">
+                <span class="fm-preview-label">แชท</span>
+                <div class="fm-preview-text" id="fm-preview-chat">Aa อักษรไทย 123 <b>ตัวหนา</b> <i>ตัวเอียง</i></div>
+            </div>
+            <div class="fm-preview-box">
+                <span class="fm-preview-label">โมโน</span>
+                <div class="fm-preview-text" id="fm-preview-mono">Aa อักษรไทย 123 <b>ตัวหนา</b> <i>ตัวเอียง</i></div>
+            </div>
+        </div>
+
+        <div id="fm-missing-warning" class="fm-warning" hidden></div>
+
+        <div class="fm-section fm-add">
+            <div class="fm-dropzone" id="fm-dropzone">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>ลากไฟล์ฟอนต์มาวาง หรือ <button type="button" id="fm-browse-btn" class="menu_button fm-inline-btn">เลือกไฟล์</button></span>
+                <small>.ttf .otf .woff .woff2 — เลือกได้หลายไฟล์พร้อมกัน (เช่น Regular + Bold + Italic)</small>
+                <input type="file" id="fm-file-input" accept=".ttf,.otf,.woff,.woff2,.ttc" multiple hidden>
+            </div>
+            <div class="fm-link-row">
+                <input type="text" id="fm-link-input" class="text_pole" placeholder="หรือวางลิงก์ไฟล์ฟอนต์ / ลิงก์ Google Fonts ที่นี่">
+                <button type="button" id="fm-link-add-btn" class="menu_button">
+                    <i class="fa-solid fa-plus"></i> เพิ่ม
+                </button>
+            </div>
+            <div id="fm-add-status" class="fm-add-status"></div>
+        </div>
+
+        <div class="fm-section fm-list-section">
+            <div class="fm-list-header"><b>คลังฟอนต์</b></div>
+            <div id="fm-font-list" class="fm-font-list"></div>
+        </div>
+    </div>
+</div>
