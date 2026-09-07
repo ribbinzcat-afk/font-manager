@@ -125,11 +125,16 @@ export function applyAll() {
     const rootVars = [];
     if (uiStack) rootVars.push(`--mainFontFamily:${uiStack};`);
     if (monoStack) rootVars.push(`--monoFontFamily:${monoStack};`);
-    if (settings.useFontSize && Number(settings.fontSize) > 0) {
-        rootVars.push(`--mainFontSize:${Number(settings.fontSize)}px;`);
-    }
     if (rootVars.length) {
         cssParts.push(`:root{${rootVars.join("")}}`);
+    }
+
+    if (settings.useFontSize && Number(settings.fontSize) > 0) {
+        // ตั้งใจไม่แตะ --mainFontSize เพราะ ST ใช้ตัวแปรนี้คำนวณขนาดไอคอนทั่วแอปด้วย
+        // (เช่น calc(var(--mainFontSize) * 1.3)) — ถ้าไปแก้ตรงนั้นไอคอนจะโตตามฟอนต์ไปด้วย
+        // จึงเซ็ต font-size ตรงๆ ที่ body แทน ให้มีผลเฉพาะข้อความที่สืบทอดขนาดจาก body
+        // (เช่น ข้อความแชท) ส่วนปุ่ม/ไอคอน/ช่องกรอกข้อมูลยังอ้างอิง --mainFontSize เดิมของ ST
+        cssParts.push(`body{font-size:${Number(settings.fontSize)}px;}`);
     }
 
     if (chatStack) {
