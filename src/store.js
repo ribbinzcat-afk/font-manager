@@ -1,5 +1,6 @@
 import { extension_settings } from "../../../../extensions.js";
 import { saveSettingsDebounced } from "../../../../../script.js";
+import { DEFAULT_GOOGLE_FONTS } from "./default-fonts.js";
 
 export const extensionName = "font-manager";
 export const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
@@ -9,7 +10,7 @@ export const defaultSettings = {
     enabled: true,
     useFontSize: false,
     fontSize: 15,
-    fonts: [],
+    fonts: DEFAULT_GOOGLE_FONTS,
     slots: { ui: "", chat: "", mono: "" },
     fallback: { ui: "sans-serif", chat: "sans-serif", mono: "monospace" },
 };
@@ -38,6 +39,7 @@ function looksLikeDirectFontFile(url) {
  */
 function migrateV1ToV2(old) {
     const migrated = structuredClone(defaultSettings);
+    migrated.fonts = []; // ย้ายเฉพาะของเดิมของผู้ใช้ — ไม่แถมชุดฟอนต์แนะนำเข้าไปตอนอัปเกรดจาก v1
     const savedFonts = Array.isArray(old.savedFonts) ? old.savedFonts : [];
     const idByIndex = [];
 
@@ -201,6 +203,27 @@ export function addGoogleFont(label, href, cssFamily) {
     settings.fonts.push(font);
     saveSettingsDebounced();
     return font;
+}
+
+/**
+ * เติมฟอนต์แนะนำ (DEFAULT_GOOGLE_FONTS) ที่ยังไม่มีในคลังของผู้ใช้ปัจจุบัน — ใช้กับผู้ใช้เดิมที่ติดตั้ง
+ * extension มาก่อนจะมีชุดฟอนต์แนะนำ (ผู้ใช้ใหม่ได้ชุดนี้ติดมาอยู่แล้วจาก defaultSettings)
+ * เช็คซ้ำด้วย id คงที่ของแต่ละฟอนต์ กดซ้ำได้ไม่เพิ่มซ้ำ
+ * @returns {number} จำนวนฟอนต์ที่เพิ่งเพิ่มเข้าไปใหม่
+ */
+export function addMissingDefaultFonts() {
+    const settings = getSettings();
+    const existingIds = new Set(settings.fonts.map((f) => f.id));
+    let addedCount = 0;
+
+    for (const font of DEFAULT_GOOGLE_FONTS) {
+        if (existingIds.has(font.id)) continue;
+        settings.fonts.push(structuredClone(font));
+        addedCount++;
+    }
+
+    if (addedCount > 0) saveSettingsDebounced();
+    return addedCount;
 }
 
 export function updateFontLabel(fontId, label) {

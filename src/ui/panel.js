@@ -18,6 +18,7 @@ import {
     setSlot,
     makeFontId,
     makeVariantId,
+    addMissingDefaultFonts,
 } from "../store.js";
 import { applyAll, stackForSlot } from "../fontcss.js";
 import {
@@ -427,6 +428,18 @@ function bindPanelEvents() {
     $panel.on("click", "#fm-link-add-btn", handleAddLink);
     $panel.on("keydown", "#fm-link-input", (e) => {
         if (e.key === "Enter") handleAddLink();
+    });
+
+    $panel.on("click", "#fm-load-defaults-btn", () => {
+        const added = addMissingDefaultFonts();
+        if (added > 0) {
+            toastr.success(`เพิ่มฟอนต์แนะนำ ${added} รายการ`, "Font Manager");
+            refreshFontCss();
+            renderSlotSelects();
+            renderFontList();
+        } else {
+            toastr.info("มีฟอนต์แนะนำครบทุกตัวอยู่แล้ว", "Font Manager");
+        }
     });
 
     $panel.on("change", ".fm-variant-weight", function () {

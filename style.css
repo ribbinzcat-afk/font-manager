@@ -218,6 +218,10 @@
     color: #d9776b;
 }
 
+.fm-load-defaults-btn {
+    align-self: flex-start;
+}
+
 /* ---------- คลังฟอนต์ ---------- */
 .fm-list-header {
     display: flex;

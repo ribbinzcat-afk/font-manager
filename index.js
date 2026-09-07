@@ -1,3 +1,7 @@
+// Font Manager — SillyTavern extension
+// Copyright (C) Milky Way
+// Licensed under the GNU Affero General Public License v3.0 or later — see LICENSE.
+
 import { eventSource, event_types } from "../../../events.js";
 
 import { extensionName, extensionFolderPath, getSettings } from "./src/store.js";
