@@ -1,3 +1,13 @@
+/* ST's core ".menu_button" ใช้ "width: min-content" ซึ่งบีบปุ่มให้แคบที่สุดเท่าที่จะพอดีเนื้อหา —
+   กับข้อความไทยยาวๆ (ไม่มีช่องว่างระหว่างคำ) ทำให้ตัวอักษรตัดขึ้นบรรทัดใหม่แบบดูอึดอัด
+   ปุ่มในส่วนของ extension นี้จึงบังคับให้กว้างพอดีเนื้อหาแบบบรรทัดเดียวเสมอ */
+.font-manager-settings .menu_button,
+.fm-panel .menu_button {
+    width: auto;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 /* ---------- ดรอเวอร์ตั้งค่า (หน้า Extensions) ---------- */
 .font-manager-settings .fm-settings-hint {
     opacity: 0.75;
