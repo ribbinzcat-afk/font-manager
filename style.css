@@ -256,6 +256,33 @@
     flex: 0 0 auto;
 }
 
+.fm-font-toggle {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: inherit;
+    opacity: 0.75;
+    cursor: pointer;
+    padding: 0;
+}
+
+.fm-font-toggle:hover {
+    opacity: 1;
+}
+
+.fm-font-summary {
+    flex: 0 0 auto;
+    font-size: 0.8em;
+    opacity: 0.6;
+    white-space: nowrap;
+}
+
 .fm-font-label-input {
     flex: 1;
     min-width: 100px;
@@ -340,6 +367,13 @@
         left: 0 !important;
         right: 0 !important;
         bottom: 0 !important;
+        /* ST's ".draggable" ใส่ backdrop-filter:blur + drop-shadow ไว้เป็นค่าเริ่มต้น (สำหรับแผงลอย
+           ที่มีเนื้อหาอื่นอยู่ด้านหลังให้เบลอ) แต่พอแผงนี้เต็มจอบนมือถือ ไม่มีอะไรให้เบลอ/มีเงาให้เห็นอยู่แล้ว
+           ปล่อยไว้เปลืองแรง GPU เปล่าๆ จนรู้สึกหน่วงตอนเลื่อน/เปิดปิด จึงปิดทิ้งเฉพาะช่วงจอแคบนี้ */
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        filter: none !important;
+        background-color: var(--SmartThemeBlurTintColor);
     }
 
     .fm-panel-body {

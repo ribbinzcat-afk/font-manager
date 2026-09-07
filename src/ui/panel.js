@@ -36,6 +36,8 @@ const STANDARD_WEIGHTS = ["100", "200", "300", "400", "500", "600", "700", "800"
 
 /** เก็บว่า variant ไหน (fontId::variantId) กำลังพบว่าไฟล์หายจากเซิร์ฟเวอร์ */
 let missingVariants = new Set();
+/** เก็บว่าฟอนต์ตระกูลไหนกำลังกางรายละเอียด (น้ำหนัก/ไฟล์) อยู่ — ค่าเริ่มต้นคือพับเก็บหมดเพื่อไม่ให้ต้องเลื่อนยาว */
+let expandedFonts = new Set();
 let panelReady = false;
 
 function keyOf(fontId, variantId) {
@@ -124,12 +126,22 @@ function fontCardHtml(font) {
             </div>`;
     }
 
-    const variantRows = font.variants.map((v) => variantRowHtml(font, v)).join("");
+    const isExpanded = expandedFonts.has(font.id);
+    const hasMissing = font.variants.some((v) => missingVariants.has(keyOf(font.id, v.id)));
+    // ไม่เรนเดอร์แถว variant เลยตอนพับเก็บ (ไม่ใช่แค่ซ่อนด้วย CSS) เพื่อลดจำนวน DOM/เวลาสร้างหน้าจอ
+    const variantRows = isExpanded ? font.variants.map((v) => variantRowHtml(font, v)).join("") : "";
+    const toggleIcon = isExpanded ? "fa-chevron-down" : "fa-chevron-right";
+    const summary = isExpanded ? "" : `<span class="fm-font-summary">${font.variants.length} น้ำหนัก${hasMissing ? " · ⚠" : ""}</span>`;
+
     return `
         <div class="fm-font-card" data-font-id="${escapeHtml(font.id)}">
             <div class="fm-font-card-header">
+                <button type="button" class="fm-font-toggle" data-font-id="${escapeHtml(font.id)}" title="แสดง/ซ่อนรายละเอียด">
+                    <i class="fa-solid ${toggleIcon}"></i>
+                </button>
                 <span class="fm-font-kind">📁</span>
                 <input type="text" class="fm-font-label-input text_pole" data-font-id="${escapeHtml(font.id)}" value="${escapeHtml(font.label)}">
+                ${summary}
                 <button type="button" class="menu_button fm-icon-btn fm-add-variant-btn" data-font-id="${escapeHtml(font.id)}" title="เพิ่มน้ำหนัก/ไฟล์ใหม่ให้ตระกูลนี้">
                     <i class="fa-solid fa-plus"></i>
                 </button>
@@ -137,7 +149,7 @@ function fontCardHtml(font) {
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
-            <div class="fm-variant-list">${variantRows}</div>
+            ${isExpanded ? `<div class="fm-variant-list">${variantRows}</div>` : ""}
         </div>`;
 }
 
@@ -251,6 +263,7 @@ async function handleFilesAdded(fileList) {
                 addVariant(fontId, variant);
             } else {
                 createFileFont(fontId, guess.guessedLabel, variant);
+                expandedFonts.add(fontId); // กางให้เห็นทันทีตอนเพิ่งสร้างตระกูลใหม่
             }
             addedCount++;
         } catch (error) {
@@ -333,7 +346,9 @@ function handleAddLink() {
         if (existing) {
             addVariant(existing.id, variant);
         } else {
-            createFileFont(makeFontId(), label, variant);
+            const newFontId = makeFontId();
+            createFileFont(newFontId, label, variant);
+            expandedFonts.add(newFontId); // กางให้เห็นทันทีตอนเพิ่งสร้างตระกูลใหม่
         }
 
         toastr.success(`เพิ่มลิงก์ฟอนต์ "${label}" แล้ว`, "Font Manager");
@@ -373,6 +388,7 @@ async function handleDeleteFont(fontId) {
             missingVariants.delete(keyOf(fontId, variant.id));
         }
     }
+    expandedFonts.delete(fontId);
     removeFont(fontId);
 
     refreshFontCss();
@@ -429,6 +445,13 @@ function bindPanelEvents() {
         const value = String($(this).val() || "").trim();
         if (value) updateFontLabel($(this).data("font-id"), value);
         renderSlotSelects();
+    });
+
+    $panel.on("click", ".fm-font-toggle", function () {
+        const fontId = $(this).data("font-id");
+        if (expandedFonts.has(fontId)) expandedFonts.delete(fontId);
+        else expandedFonts.add(fontId);
+        renderFontList();
     });
 
     $panel.on("click", ".fm-delete-variant-btn", function () {
