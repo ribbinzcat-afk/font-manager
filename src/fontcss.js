@@ -102,15 +102,16 @@ export function applyAll() {
     const settings = getSettings();
     if (!settings.enabled) return;
 
-    const usedFontIds = new Set(
-        ["ui", "chat", "mono"].map((slot) => settings.slots[slot]).filter(Boolean),
-    );
-    const usedFonts = settings.fonts.filter((f) => usedFontIds.has(f.id));
-
     const cssParts = [];
     const gfontHrefs = new Set();
 
-    for (const font of usedFonts) {
+    // โหลด @font-face / ลิงก์ Google Fonts ของ "ทุกฟอนต์ในคลัง" เสมอ ไม่ใช่แค่ฟอนต์ที่ถูกตั้งให้ช่อง
+    // UI/แชท/โมโนเท่านั้น — เพราะผู้ใช้จำนวนมากอ้างอิงชื่อฟอนต์ตรงๆ ใน CSS/HTML ที่แทรกเข้าข้อความแชทเอง
+    // (เช่น การ์ดตัวละครที่ใช้ Tavern Regex สร้าง HUD/การ์ดในแชท แล้วเขียน font-family: 'Itim' เอง)
+    // ถ้าฟอนต์นั้นไม่ได้ถูกผูกกับช่องไหนเลย เบราว์เซอร์จะไม่รู้จักชื่อฟอนต์นั้นเลย ต่อให้สะกดถูกก็ตกไปใช้ fallback
+    // เงียบๆ — ส่วนตัวไฟล์ฟอนต์จริงยังโหลดแบบ lazy ตามปกติของ @font-face (ต่อให้ประกาศไว้ทุกตัว ก็ไม่โดนดาวน์โหลด
+    // จนกว่าจะมีข้อความบนหน้าจอเรียกใช้ชื่อนั้นจริง) จึงไม่ทำให้เปลืองแบนด์วิดท์เพิ่ม
+    for (const font of settings.fonts) {
         if (font.kind === "file") {
             cssParts.push(fontFaceBlock(font));
         } else if (font.kind === "gfont" && font.href) {

@@ -311,6 +311,20 @@
     word-break: break-all;
 }
 
+.fm-font-css-hint {
+    margin-top: 6px;
+}
+
+.fm-font-css-hint code {
+    font-family: var(--monoFontFamily);
+    font-size: 0.8em;
+    background-color: var(--black30a);
+    border-radius: 4px;
+    padding: 2px 6px;
+    word-break: break-all;
+    user-select: all;
+}
+
 .fm-variant-list {
     display: flex;
     flex-direction: column;

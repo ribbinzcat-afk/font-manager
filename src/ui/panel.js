@@ -20,7 +20,7 @@ import {
     makeVariantId,
     addMissingDefaultFonts,
 } from "../store.js";
-import { applyAll, stackForSlot } from "../fontcss.js";
+import { applyAll, stackForSlot, internalFamilyName } from "../fontcss.js";
 import {
     getSupportedExtension,
     formatForExtension,
@@ -112,6 +112,13 @@ function variantRowHtml(font, variant) {
         </div>`;
 }
 
+function cssNameHintHtml(font) {
+    const name = font.kind === "file" ? internalFamilyName(font) : font.cssFamily;
+    return `<div class="fm-font-css-hint" title="ชื่อที่ใช้อ้างอิงฟอนต์นี้ตรงๆ ใน CSS/HTML เอง เช่น ใน Tavern Regex">
+        <code>font-family: "${escapeHtml(name)}";</code>
+    </div>`;
+}
+
 function fontCardHtml(font) {
     if (font.kind === "gfont") {
         return `
@@ -123,6 +130,7 @@ function fontCardHtml(font) {
                         <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
+                ${cssNameHintHtml(font)}
                 <div class="fm-font-href" title="${escapeHtml(font.href)}">${escapeHtml(font.href)}</div>
             </div>`;
     }
@@ -150,6 +158,7 @@ function fontCardHtml(font) {
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
+            ${cssNameHintHtml(font)}
             ${isExpanded ? `<div class="fm-variant-list">${variantRows}</div>` : ""}
         </div>`;
 }
