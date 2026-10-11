@@ -69,21 +69,59 @@ export function stackForSlot(settings, slotKey) {
     return `"${cssString(familyName)}", ${fallback}`;
 }
 
+/** id ของ <style> ที่เก็บเฉพาะ @font-face (แยกจากกฎ override เพื่อไม่ต้องขยับ/สร้างใหม่บ่อยๆ) */
+export const FACES_STYLE_ID = "font-manager-faces";
+
 /**
- * ลบสไตล์/ลิงก์ที่ extension นี้เคยฉีดไว้ทั้งหมดออกจาก <head>
+ * หา <style> ตาม id ถ้ายังไม่มีให้สร้างใหม่ต่อท้าย <head>
+ * @param {string} id
+ * @returns {HTMLStyleElement}
  */
-function clearInjectedNodes() {
-    document.getElementById(STYLE_ID)?.remove();
-    document.querySelectorAll(`link.${GFONT_LINK_CLASS}`).forEach((el) => el.remove());
+function ensureStyle(id) {
+    let style = /** @type {HTMLStyleElement|null} */ (document.getElementById(id));
+    if (!style) {
+        style = document.createElement("style");
+        style.id = id;
+        document.head.appendChild(style);
+    }
+    return style;
 }
 
 /**
- * ฉีด <link rel="stylesheet"> สำหรับฟอนต์ Google Fonts (ไม่ใช้ @import เพราะ @import ต้องอยู่บนสุดของ
- * stylesheet เท่านั้น พอมี @font-face ปนอยู่ในสไตล์เดียวกัน @import จะถูกเบราว์เซอร์ทิ้งเงียบๆ)
+ * เขียนเนื้อหาลง <style> เฉพาะตอนที่เนื้อหาเปลี่ยนจริงเท่านั้น
+ * (การเขียน textContent ซ้ำแม้เป็นค่าเดิม ทำให้เบราว์เซอร์ parse สไตล์ชีตใหม่และลงทะเบียน @font-face ใหม่
+ * ระหว่างนั้นข้อความจะถูกวาดด้วยฟอนต์ fallback ชั่วครู่ = อาการ "ฟอนต์กระตุก")
+ * @param {string} id
+ * @param {string} css
+ */
+function syncStyle(id, css) {
+    if (!css) {
+        document.getElementById(id)?.remove();
+        return;
+    }
+    const style = ensureStyle(id);
+    if (style.textContent !== css) style.textContent = css;
+}
+
+/**
+ * sync <link rel="stylesheet"> ของ Google Fonts แบบเทียบส่วนต่าง — ลิงก์ที่ยังใช้อยู่จะไม่ถูกแตะเลย
+ * (ไม่ใช้ @import เพราะ @import ต้องอยู่บนสุดของ stylesheet เท่านั้น พอมี @font-face ปนอยู่ในสไตล์เดียวกัน
+ * @import จะถูกเบราว์เซอร์ทิ้งเงียบๆ)
  * @param {Set<string>} hrefs
  */
-function injectGoogleFontLinks(hrefs) {
+function syncGoogleFontLinks(hrefs) {
+    const existing = new Map();
+    document.querySelectorAll(`link.${GFONT_LINK_CLASS}`).forEach((el) => {
+        const href = el.getAttribute("href");
+        if (!hrefs.has(href) || existing.has(href)) {
+            el.remove(); // ไม่ใช้แล้ว หรือซ้ำ
+        } else {
+            existing.set(href, el);
+        }
+    });
+
     for (const href of hrefs) {
+        if (existing.has(href)) continue;
         const link = document.createElement("link");
         link.rel = "stylesheet";
         link.className = GFONT_LINK_CLASS;
@@ -93,27 +131,51 @@ function injectGoogleFontLinks(hrefs) {
 }
 
 /**
- * ฟังก์ชันหลัก — อ่านการตั้งค่าปัจจุบันแล้ว sync สิ่งที่ฉีดอยู่ใน <head> ให้ตรงกันเสมอ
- * เรียกซ้ำได้ตลอดเวลา (idempotent): ลบของเก่าทิ้งก่อนสร้างใหม่ทุกครั้ง
+ * ให้ <style> กฎ override ของเราอยู่หลังสุดใน <head> เสมอ (เผื่อธีม/extension อื่นฉีดสไตล์ทีหลังแล้วทับเรา)
+ * ขยับเฉพาะตอนที่มีสไตล์ชีตอื่นมาต่อท้ายจริงๆ และสไตล์นี้ไม่มี @font-face จึงขยับได้โดยไม่ทำให้ฟอนต์โหลดใหม่
+ */
+function keepOverridesLast() {
+    const style = document.getElementById(STYLE_ID);
+    if (!style) return;
+    let next = style.nextElementSibling;
+    while (next) {
+        const isSheet = next.tagName === "STYLE" || (next.tagName === "LINK" && /stylesheet/i.test(next.getAttribute("rel") || ""));
+        const isOurs = next.id === FACES_STYLE_ID || next.classList.contains(GFONT_LINK_CLASS);
+        if (isSheet && !isOurs) {
+            document.head.appendChild(style);
+            return;
+        }
+        next = next.nextElementSibling;
+    }
+}
+
+/**
+ * ฟังก์ชันหลัก — อ่านการตั้งค่าปัจจุบันแล้ว sync สิ่งที่ฉีดอยู่ใน <head> ให้ตรงกัน
+ * เรียกซ้ำได้ตลอดเวลา (idempotent) และ "ไม่แตะ DOM เลย" ถ้าไม่มีอะไรเปลี่ยน
+ * — สำคัญมาก เพราะ index.js เรียกฟังก์ชันนี้ทุกครั้งที่ ST เซฟการตั้งค่า (SETTINGS_UPDATED)
+ * ซึ่งเกิดถี่มาก (ทุกข้อความใหม่, สลับแชท, ขยับสไลเดอร์ ฯลฯ) เวอร์ชันก่อนหน้าลบแล้วสร้างใหม่ทุกครั้ง
+ * ทำให้ฟอนต์หายไปชั่วขณะแล้วกลับมา = ตัวอักษรกระพริบสลับกับฟอนต์เครื่อง
  */
 export function applyAll() {
-    clearInjectedNodes();
-
     const settings = getSettings();
-    if (!settings.enabled) return;
+    if (!settings.enabled) {
+        syncStyle(STYLE_ID, "");
+        syncStyle(FACES_STYLE_ID, "");
+        syncGoogleFontLinks(new Set());
+        return;
+    }
 
+    const faceParts = [];
     const cssParts = [];
     const gfontHrefs = new Set();
 
     // โหลด @font-face / ลิงก์ Google Fonts ของ "ทุกฟอนต์ในคลัง" เสมอ ไม่ใช่แค่ฟอนต์ที่ถูกตั้งให้ช่อง
     // UI/แชท/โมโนเท่านั้น — เพราะผู้ใช้จำนวนมากอ้างอิงชื่อฟอนต์ตรงๆ ใน CSS/HTML ที่แทรกเข้าข้อความแชทเอง
     // (เช่น การ์ดตัวละครที่ใช้ Tavern Regex สร้าง HUD/การ์ดในแชท แล้วเขียน font-family: 'Itim' เอง)
-    // ถ้าฟอนต์นั้นไม่ได้ถูกผูกกับช่องไหนเลย เบราว์เซอร์จะไม่รู้จักชื่อฟอนต์นั้นเลย ต่อให้สะกดถูกก็ตกไปใช้ fallback
-    // เงียบๆ — ส่วนตัวไฟล์ฟอนต์จริงยังโหลดแบบ lazy ตามปกติของ @font-face (ต่อให้ประกาศไว้ทุกตัว ก็ไม่โดนดาวน์โหลด
-    // จนกว่าจะมีข้อความบนหน้าจอเรียกใช้ชื่อนั้นจริง) จึงไม่ทำให้เปลืองแบนด์วิดท์เพิ่ม
+    // ส่วนตัวไฟล์ฟอนต์จริงยังโหลดแบบ lazy ตามปกติของ @font-face จึงไม่ทำให้เปลืองแบนด์วิดท์เพิ่ม
     for (const font of settings.fonts) {
         if (font.kind === "file") {
-            cssParts.push(fontFaceBlock(font));
+            faceParts.push(fontFaceBlock(font));
         } else if (font.kind === "gfont" && font.href) {
             gfontHrefs.add(font.href);
         }
@@ -132,26 +194,21 @@ export function applyAll() {
 
     if (settings.useFontSize && Number(settings.fontSize) > 0) {
         // ตั้งใจไม่แตะ --mainFontSize เพราะ ST ใช้ตัวแปรนี้คำนวณขนาดไอคอนทั่วแอปด้วย
-        // (เช่น calc(var(--mainFontSize) * 1.3)) — ถ้าไปแก้ตรงนั้นไอคอนจะโตตามฟอนต์ไปด้วย
         // จึงเซ็ต font-size ตรงๆ ที่ body แทน ให้มีผลเฉพาะข้อความที่สืบทอดขนาดจาก body
-        // (เช่น ข้อความแชท) ส่วนปุ่ม/ไอคอน/ช่องกรอกข้อมูลยังอ้างอิง --mainFontSize เดิมของ ST
         cssParts.push(`body{font-size:${Number(settings.fontSize)}px;}`);
     }
 
     if (chatStack) {
-        // .mes_text ไม่ได้ตั้ง font-family ของตัวเอง (สืบทอดจาก body ตามปกติ) จึงพอ override
-        // ที่ตัวมันเองแล้วปล่อยให้ลูกๆ สืบทอดต่อ — ยกเว้น code/kbd/samp/pre ที่มีกฎ font-family
-        // ของตัวเอง (var(--monoFontFamily)) อยู่แล้ว จึงไม่ถูกอันนี้ทับ
+        // .mes_text ไม่ได้ตั้ง font-family ของตัวเอง (สืบทอดจาก body) จึงพอ override ที่ตัวมันเอง
+        // ยกเว้น code/kbd/samp/pre ที่มีกฎ font-family ของตัวเอง (var(--monoFontFamily)) อยู่แล้ว
         cssParts.push(`#chat .mes_text{font-family:${chatStack};}`);
         cssParts.push(`#send_textarea{font-family:${chatStack};}`);
     }
 
-    if (gfontHrefs.size) injectGoogleFontLinks(gfontHrefs);
-
-    if (cssParts.length) {
-        const style = document.createElement("style");
-        style.id = STYLE_ID;
-        style.textContent = cssParts.join("\n");
-        document.head.appendChild(style);
-    }
+    // ลำดับใน <head>: @font-face และลิงก์ Google Fonts ไม่ต้องอยู่ท้ายสุด (แค่ประกาศฟอนต์)
+    // จึงสร้างครั้งเดียวแล้วปล่อยไว้ที่เดิม ส่วนกฎ override ค่อยดันไปท้ายสุดเมื่อจำเป็น
+    syncStyle(FACES_STYLE_ID, faceParts.join("\n"));
+    syncGoogleFontLinks(gfontHrefs);
+    syncStyle(STYLE_ID, cssParts.join("\n"));
+    keepOverridesLast();
 }
