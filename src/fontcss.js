@@ -69,6 +69,16 @@ export function stackForSlot(settings, slotKey) {
     return `"${cssString(familyName)}", ${fallback}`;
 }
 
+/**
+ * ชื่อตัวแปร CSS ที่ extension ประกาศไว้ที่ :root ให้ธีม/Custom CSS อ้างถึงฟอนต์ที่เลือกอยู่ในแต่ละช่อง
+ * ตัวอย่างใน Custom CSS: `#chat .mes_text { font-family: var(--fm-chat-font, "Sarabun", sans-serif) !important; }`
+ */
+export const THEME_VARS = Object.freeze({
+    ui: "--fm-ui-font",
+    chat: "--fm-chat-font",
+    mono: "--fm-mono-font",
+});
+
 /** id ของ <style> ที่เก็บเฉพาะ @font-face (แยกจากกฎ override เพื่อไม่ต้องขยับ/สร้างใหม่บ่อยๆ) */
 export const FACES_STYLE_ID = "font-manager-faces";
 
@@ -188,6 +198,13 @@ export function applyAll() {
     const rootVars = [];
     if (uiStack) rootVars.push(`--mainFontFamily:${uiStack};`);
     if (monoStack) rootVars.push(`--monoFontFamily:${monoStack};`);
+
+    // ตัวแปรสาธารณะสำหรับธีม/Custom CSS: ประกาศ "เฉพาะช่องที่ตั้งฟอนต์ไว้" เท่านั้น
+    // ธีมจึงเขียน var(--fm-chat-font, <ฟอนต์ของธีม>) ได้ — ถ้าผู้ใช้ไม่ได้เลือกฟอนต์ช่องนั้น
+    // หรือปิด extension ตัวแปรจะไม่มีอยู่ แล้วเบราว์เซอร์ใช้ค่า fallback (ฟอนต์ของธีม) ให้อัตโนมัติ
+    for (const [slotKey, stack] of [["ui", uiStack], ["chat", chatStack], ["mono", monoStack]]) {
+        if (stack) rootVars.push(`${THEME_VARS[slotKey]}:${stack};`);
+    }
     if (rootVars.length) {
         cssParts.push(`:root{${rootVars.join("")}}`);
     }
